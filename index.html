@@ -59,7 +59,7 @@
       }
 
       #submitUrlBtn {
-        font-size: 16px; /* or 1rem if you're comfortable with it */
+        font-size: 16px;
         padding: 16px 16px;
         background: white;
         color: black;
@@ -141,6 +141,33 @@
           background-position: 5% 5%;
         }
       }
+
+      #custom-menu {
+        position: absolute;
+        display: none;
+        background: rgba(30, 30, 30, 0.95);
+        color: white;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        z-index: 20000;
+        font-size: 14px;
+        min-width: 180px;
+      }
+
+      #custom-menu button {
+        display: block;
+        width: 100%;
+        padding: 10px 16px;
+        background: none;
+        border: none;
+        color: white;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      #custom-menu button:hover {
+        background: #444;
+      }
     </style>
   </head>
   <body>
@@ -157,25 +184,24 @@
       <div class="cover_noise"></div>
     </div>
 
+    <!-- Custom context menu -->
+    <div id="custom-menu">
+      <button id="download-screenshot">📸 Download Screenshot</button>
+    </div>
+
+    <!-- html2canvas for screenshot capture -->
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
     <script>
-      const menu = document.getElementById("custom-menu");
-
-      document.addEventListener("contextmenu", (e) => {
-        e.preventDefault();
-        menu.style.top = `${e.pageY}px`;
-        menu.style.left = `${e.pageX}px`;
-        menu.style.display = "block";
-      });
-
-      document.addEventListener("click", () => {
-        menu.style.display = "none";
-      });
-
       const fileInput = document.getElementById("fileInput");
       const urlInput = document.getElementById("urlInput");
       const submitUrlBtn = document.getElementById("submitUrlBtn");
       const uploadedImage = document.getElementById("uploaded-image");
       const uploadUI = document.getElementById("upload-ui");
+      const imageContainer = document.getElementById("image-container");
+
+      const customMenu = document.getElementById("custom-menu");
+      const screenshotBtn = document.getElementById("download-screenshot");
 
       function hideUploadUI() {
         uploadUI.style.display = "none";
@@ -206,7 +232,6 @@
         }
       });
 
-      // Drag-and-drop support
       window.addEventListener("dragover", (e) => {
         e.preventDefault();
         uploadUI.classList.add("dragover");
@@ -228,6 +253,33 @@
           };
           reader.readAsDataURL(file);
         }
+      });
+
+      // Right-click menu
+      document.addEventListener("contextmenu", (e) => {
+        e.preventDefault();
+        customMenu.style.display = "block";
+        customMenu.style.left = `${e.pageX}px`;
+        customMenu.style.top = `${e.pageY}px`;
+      });
+
+      document.addEventListener("click", () => {
+        customMenu.style.display = "none";
+      });
+
+      // Screenshot logic
+      screenshotBtn.addEventListener("click", () => {
+        customMenu.style.display = "none";
+        html2canvas(imageContainer)
+          .then((canvas) => {
+            const link = document.createElement("a");
+            link.download = "screenshot.png";
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+          })
+          .catch((err) => {
+            alert("Screenshot failed: " + err);
+          });
       });
     </script>
   </body>
