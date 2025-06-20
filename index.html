@@ -10,6 +10,62 @@
         overflow: hidden;
         background: black;
         position: relative;
+        font-family: sans-serif;
+      }
+
+      @media screen and (min-width: 768px) {
+        html {
+          font-size: 5.208vw;
+        }
+      }
+      @media screen and (max-width: 767.9px) {
+        html {
+          font-size: 13.037vw;
+        }
+      }
+
+      #upload-ui {
+        font-size: 16px;
+        position: fixed;
+        z-index: 10000;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.9);
+        flex-direction: column;
+        color: white;
+        text-align: center;
+        transition: opacity 0.3s ease;
+        padding: 16px;
+      }
+
+      #upload-ui.dragover {
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px dashed white;
+      }
+
+      #fileInput,
+      #urlInput {
+        font-size: 16px;
+        padding: 16px;
+        margin: 16px 0;
+        width: min(90%, 400px);
+        border: none;
+        border-radius: 0.3rem;
+      }
+
+      #submitUrlBtn {
+        font-size: 16px; /* or 1rem if you're comfortable with it */
+        padding: 16px 16px;
+        background: white;
+        color: black;
+        border: none;
+        border-radius: 0.3rem;
+        cursor: pointer;
       }
 
       #image-container {
@@ -46,7 +102,7 @@
         height: 100%;
         animation: noise-animation 0.3s steps(5) infinite;
         background-size: min(1.5rem, 150px);
-        background-image: url(https://www.residentevil.com/requiem/assets/images/common/parts/bg_noise.webp);
+        background-image: url("bg_noise.webp");
         background-repeat: repeat;
       }
 
@@ -85,55 +141,94 @@
           background-position: 5% 5%;
         }
       }
-
-      input[type="file"] {
-        position: absolute;
-        top: 1rem;
-        left: 1rem;
-        z-index: 10000;
-      }
     </style>
   </head>
   <body>
-    <input type="file" accept="image/*" id="fileInput" />
+    <div id="upload-ui">
+      <h1>Upload Your Image</h1>
+      <p>Click, drag an image here, or paste a direct image URL.</p>
+      <input type="file" accept="image/*" id="fileInput" />
+      <input type="text" id="urlInput" placeholder="Paste image URL here..." />
+      <button id="submitUrlBtn">Load from URL</button>
+    </div>
+
     <div id="image-container">
       <img id="uploaded-image" src="" alt="Your uploaded image" />
       <div class="cover_noise"></div>
     </div>
 
     <script>
-      document
-        .getElementById("fileInput")
-        .addEventListener("change", function (event) {
-          const file = event.target.files[0];
-          if (file) {
-            const reader = new FileReader();
-            reader.onload = function (e) {
-              document.getElementById("uploaded-image").src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-          }
-        });
+      const menu = document.getElementById("custom-menu");
 
-      // Add dust elements dynamically
-      const dustContainer = document.getElementById("dusts");
-      for (let i = 1; i <= 8; i++) {
-        const div = document.createElement("div");
-        div.classList.add("dust", "img_wrap");
-        div.style.top = `${Math.random() * 100}%`;
-        div.style.left = `${Math.random() * 100}%`;
+      document.addEventListener("contextmenu", (e) => {
+        e.preventDefault();
+        menu.style.top = `${e.pageY}px`;
+        menu.style.left = `${e.pageX}px`;
+        menu.style.display = "block";
+      });
 
-        const img = document.createElement("img");
-        img.src = `https://www.residentevil.com/requiem/assets/images/common/dust/dust_${i}.webp`;
-        img.width = 30;
-        img.height = 30;
-        img.alt = "";
-        img.loading = "lazy";
-        img.style.color = "transparent";
+      document.addEventListener("click", () => {
+        menu.style.display = "none";
+      });
 
-        div.appendChild(img);
-        dustContainer.appendChild(div);
+      const fileInput = document.getElementById("fileInput");
+      const urlInput = document.getElementById("urlInput");
+      const submitUrlBtn = document.getElementById("submitUrlBtn");
+      const uploadedImage = document.getElementById("uploaded-image");
+      const uploadUI = document.getElementById("upload-ui");
+
+      function hideUploadUI() {
+        uploadUI.style.display = "none";
       }
+
+      function handleImageSource(src) {
+        uploadedImage.src = src;
+        hideUploadUI();
+      }
+
+      fileInput.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (file && file.type.startsWith("image/")) {
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            handleImageSource(e.target.result);
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+
+      submitUrlBtn.addEventListener("click", () => {
+        const url = urlInput.value.trim();
+        if (url && (url.startsWith("http://") || url.startsWith("https://"))) {
+          handleImageSource(url);
+        } else {
+          alert("Please enter a valid image URL.");
+        }
+      });
+
+      // Drag-and-drop support
+      window.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        uploadUI.classList.add("dragover");
+      });
+
+      window.addEventListener("dragleave", (e) => {
+        e.preventDefault();
+        uploadUI.classList.remove("dragover");
+      });
+
+      window.addEventListener("drop", (e) => {
+        e.preventDefault();
+        uploadUI.classList.remove("dragover");
+        const file = e.dataTransfer.files[0];
+        if (file && file.type.startsWith("image/")) {
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            handleImageSource(e.target.result);
+          };
+          reader.readAsDataURL(file);
+        }
+      });
     </script>
   </body>
 </html>
